@@ -42,7 +42,10 @@ class tx_cabagloginas implements backend_toolbarItem {
 		$this->users = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows(
 			'*',
 			'fe_users',
-			'email = ' . $GLOBALS['TYPO3_DB']->fullQuoteStr($email, 'fe_users') . ' AND disable = 0 AND deleted = 0'
+			'email = ' . $GLOBALS['TYPO3_DB']->fullQuoteStr($email, 'fe_users') . ' AND disable = 0 AND deleted = 0',
+			'',
+			'',
+			'15'
 		);
 	}
 
