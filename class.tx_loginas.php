@@ -37,32 +37,97 @@ require_once(PATH_typo3 . 'interfaces/interface.backend_toolbaritem.php');
  * @subpackage	loginas
  */
 class tx_loginas implements backend_toolbarItem {
+	/**
+	 * Reference to the TYPO3 backend object
+	 *
+	 * @var TYPO3backend
+	 */
 	protected $backendReference;
+
+	/**
+	 * Email address of current backend user
+	 *
+	 * @var string
+	 */
+	protected $currentBackendUserEmailAddress;
+
+	/**
+	 * Array of users with the same email address as the current logged in backend user
+	 *
+	 * @var array
+	 */
 	protected $users = array();
 
+	/**
+	 * Extension key of this extension
+	 *
+	 * @var string
+	 */
 	protected $EXTKEY = 'loginas';
 
+	/**
+	 * Gets users with the same email address as the current logged in backend user
+	 *
+	 * @param	string		$backendReference: Reference to the TYPO3 backend object
+	 * @return	void
+	 */
 	public function __construct(TYPO3backend &$backendReference = null) {
-		$GLOBALS['LANG']->includeLLFile('EXT:loginas/locallang_db.xml');
 		$this->backendReference = $backendReference;
 
-		$email = $GLOBALS['BE_USER']->user['email'];
+		$this->includeExtensionLanguageFile();
+		$this->setCurrentBackendUserEmailAddress();
+		$this->findFeUsersWithSameEmailAddress();
+	}
 
+	/**
+	 * Includes locallang file from this extension
+	 *
+	 * @return	void
+	 */
+	protected function includeExtensionLanguageFile() {
+		$GLOBALS['LANG']->includeLLFile('EXT:loginas/locallang_db.xml');
+	}
+
+	/**
+	 * Includes locallang file from this extension
+	 *
+	 * @return	void
+	 */
+	protected function setCurrentBackendUserEmailAddress() {
+		$this->currentBackendUserEmailAddress = $GLOBALS['BE_USER']->user['email'];
+	}
+
+	/**
+	 * Finds all FE users with the same email address as the current backend user
+	 *
+	 * @return	void
+	 */
+	protected function findFeUsersWithSameEmailAddress() {
 		$this->users = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows(
 			'*',
 			'fe_users',
-			'email = ' . $GLOBALS['TYPO3_DB']->fullQuoteStr($email, 'fe_users') . ' AND disable = 0 AND deleted = 0',
+			'email = ' . $GLOBALS['TYPO3_DB']->fullQuoteStr($this->currentBackendUserEmailAddress, 'fe_users') . ' AND disable = 0 AND deleted = 0',
 			'',
 			'',
 			'15'
 		);
 	}
 
+	/**
+	 * Checks if the toolbar item shall be displayed
+	 *
+	 * @return	void
+	 */
 	public function checkAccess() {
 		$conf = $GLOBALS['BE_USER']->getTSConfig('backendToolbarItem.tx_loginas.disabled');
 		return ($conf['value'] == 1 ? false : true);
 	}
 
+	/**
+	 * Renders the output for the toolbar menu
+	 *
+	 * @return	void
+	 */
 	public function render() {
 		$this->backendReference->addCssFile('loginas', t3lib_extMgm::extRelPath($this->EXTKEY) . 'loginas.css');
 		$this->backendReference->addJavascriptFile(t3lib_extMgm::extRelPath($this->EXTKEY).'loginas.js');
